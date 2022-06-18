@@ -10,8 +10,11 @@ import math
 from keras_flops import get_flops
 import tensorflow_addons as tfa
 
+mode=['vgg16', 'vgg19']
 
-def FCN_32(num_classes,input_height, input_width):
+
+
+def FCN_32(num_classes,input_height, input_width,mode):
     '''
       [B,H,W,C] = x.shape
     '''
@@ -21,11 +24,15 @@ def FCN_32(num_classes,input_height, input_width):
     # Returns:A `tensor`.
     inputs=Input(shape=(input_height,input_width,3))
 
-    model = vgg16.VGG16(
-         include_top=False,
-         weights='imagenet', input_tensor=inputs)
-    assert isinstance(model, Model),'The model should be the instantiation of the keras Model '
+    if mode not in ['vgg16', 'vgg19']:
+      raise ValueError('`mode` argument should be one of `"vgg16"` '
+                       'or `"vgg19"`.')
 
+    else:
+        model = vgg16.VGG16(
+                include_top=False,
+                weights='imagenet', input_tensor=inputs)
+        assert isinstance(model, Model),'The model should be the instantiation of the keras Model '
 
     x = Conv2D(
          filters=4096,
@@ -67,9 +74,10 @@ def FCN_32(num_classes,input_height, input_width):
 
 
 if __name__ == '__main__':
-    model = FCN_32(21, 224, 224)
+    model = FCN_32(21, 224, 224,mode='vgg16')
     model.summary()
-    plot_model(model, show_shapes=True, to_file='model_fcn32.png')
-    print(len(model.layers))
+    # plot_model(model, show_shapes=True, to_file='model_fcn32.png')
+    print(model.get_layer(index=24).get_weights()[0].shape)
+
     # flops = get_flops(FCN_32(21,224,224), batch_size=1) / (2 * 10 ** 9)
     # print(f"FLOPs:{flops:.1f}G")
